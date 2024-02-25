@@ -22,29 +22,34 @@ const MemeSchema = CollectionSchema(
       name: r'blurHash',
       type: IsarType.string,
     ),
-    r'imageHash': PropertySchema(
+    r'fullText': PropertySchema(
       id: 1,
+      name: r'fullText',
+      type: IsarType.string,
+    ),
+    r'imageHash': PropertySchema(
+      id: 2,
       name: r'imageHash',
       type: IsarType.string,
     ),
     r'originalFilename': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'originalFilename',
       type: IsarType.string,
     ),
     r'state': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'state',
       type: IsarType.byte,
       enumMap: _MemestateEnumValueMap,
     ),
-    r'storedFilename': PropertySchema(
-      id: 4,
-      name: r'storedFilename',
+    r'storedPath': PropertySchema(
+      id: 5,
+      name: r'storedPath',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'title',
       type: IsarType.string,
     )
@@ -55,14 +60,14 @@ const MemeSchema = CollectionSchema(
   deserializeProp: _memeDeserializeProp,
   idName: r'id',
   indexes: {
-    r'storedFilename': IndexSchema(
-      id: -3910273592639713404,
-      name: r'storedFilename',
+    r'storedPath': IndexSchema(
+      id: 5318567614768445414,
+      name: r'storedPath',
       unique: true,
       replace: false,
       properties: [
         IndexPropertySchema(
-          name: r'storedFilename',
+          name: r'storedPath',
           type: IndexType.value,
           caseSensitive: true,
         )
@@ -89,6 +94,19 @@ const MemeSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'title',
+          type: IndexType.value,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'fullText': IndexSchema(
+      id: 9100252536502516468,
+      name: r'fullText',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'fullText',
           type: IndexType.value,
           caseSensitive: true,
         )
@@ -137,6 +155,12 @@ int _memeEstimateSize(
     }
   }
   {
+    final value = object.fullText;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.imageHash;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -149,7 +173,7 @@ int _memeEstimateSize(
     }
   }
   {
-    final value = object.storedFilename;
+    final value = object.storedPath;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
@@ -170,11 +194,12 @@ void _memeSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.blurHash);
-  writer.writeString(offsets[1], object.imageHash);
-  writer.writeString(offsets[2], object.originalFilename);
-  writer.writeByte(offsets[3], object.state.index);
-  writer.writeString(offsets[4], object.storedFilename);
-  writer.writeString(offsets[5], object.title);
+  writer.writeString(offsets[1], object.fullText);
+  writer.writeString(offsets[2], object.imageHash);
+  writer.writeString(offsets[3], object.originalFilename);
+  writer.writeByte(offsets[4], object.state.index);
+  writer.writeString(offsets[5], object.storedPath);
+  writer.writeString(offsets[6], object.title);
 }
 
 Meme _memeDeserialize(
@@ -185,13 +210,14 @@ Meme _memeDeserialize(
 ) {
   final object = Meme();
   object.blurHash = reader.readStringOrNull(offsets[0]);
+  object.fullText = reader.readStringOrNull(offsets[1]);
   object.id = id;
-  object.imageHash = reader.readStringOrNull(offsets[1]);
-  object.originalFilename = reader.readStringOrNull(offsets[2]);
-  object.state = _MemestateValueEnumMap[reader.readByteOrNull(offsets[3])] ??
+  object.imageHash = reader.readStringOrNull(offsets[2]);
+  object.originalFilename = reader.readStringOrNull(offsets[3]);
+  object.state = _MemestateValueEnumMap[reader.readByteOrNull(offsets[4])] ??
       MemeState.reviewed;
-  object.storedFilename = reader.readStringOrNull(offsets[4]);
-  object.title = reader.readStringOrNull(offsets[5]);
+  object.storedPath = reader.readStringOrNull(offsets[5]);
+  object.title = reader.readStringOrNull(offsets[6]);
   return object;
 }
 
@@ -209,11 +235,13 @@ P _memeDeserializeProp<P>(
     case 2:
       return (reader.readStringOrNull(offset)) as P;
     case 3:
+      return (reader.readStringOrNull(offset)) as P;
+    case 4:
       return (_MemestateValueEnumMap[reader.readByteOrNull(offset)] ??
           MemeState.reviewed) as P;
-    case 4:
-      return (reader.readStringOrNull(offset)) as P;
     case 5:
+      return (reader.readStringOrNull(offset)) as P;
+    case 6:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -243,58 +271,56 @@ void _memeAttach(IsarCollection<dynamic> col, Id id, Meme object) {
 }
 
 extension MemeByIndex on IsarCollection<Meme> {
-  Future<Meme?> getByStoredFilename(String? storedFilename) {
-    return getByIndex(r'storedFilename', [storedFilename]);
+  Future<Meme?> getByStoredPath(String? storedPath) {
+    return getByIndex(r'storedPath', [storedPath]);
   }
 
-  Meme? getByStoredFilenameSync(String? storedFilename) {
-    return getByIndexSync(r'storedFilename', [storedFilename]);
+  Meme? getByStoredPathSync(String? storedPath) {
+    return getByIndexSync(r'storedPath', [storedPath]);
   }
 
-  Future<bool> deleteByStoredFilename(String? storedFilename) {
-    return deleteByIndex(r'storedFilename', [storedFilename]);
+  Future<bool> deleteByStoredPath(String? storedPath) {
+    return deleteByIndex(r'storedPath', [storedPath]);
   }
 
-  bool deleteByStoredFilenameSync(String? storedFilename) {
-    return deleteByIndexSync(r'storedFilename', [storedFilename]);
+  bool deleteByStoredPathSync(String? storedPath) {
+    return deleteByIndexSync(r'storedPath', [storedPath]);
   }
 
-  Future<List<Meme?>> getAllByStoredFilename(
-      List<String?> storedFilenameValues) {
-    final values = storedFilenameValues.map((e) => [e]).toList();
-    return getAllByIndex(r'storedFilename', values);
+  Future<List<Meme?>> getAllByStoredPath(List<String?> storedPathValues) {
+    final values = storedPathValues.map((e) => [e]).toList();
+    return getAllByIndex(r'storedPath', values);
   }
 
-  List<Meme?> getAllByStoredFilenameSync(List<String?> storedFilenameValues) {
-    final values = storedFilenameValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'storedFilename', values);
+  List<Meme?> getAllByStoredPathSync(List<String?> storedPathValues) {
+    final values = storedPathValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'storedPath', values);
   }
 
-  Future<int> deleteAllByStoredFilename(List<String?> storedFilenameValues) {
-    final values = storedFilenameValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'storedFilename', values);
+  Future<int> deleteAllByStoredPath(List<String?> storedPathValues) {
+    final values = storedPathValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'storedPath', values);
   }
 
-  int deleteAllByStoredFilenameSync(List<String?> storedFilenameValues) {
-    final values = storedFilenameValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'storedFilename', values);
+  int deleteAllByStoredPathSync(List<String?> storedPathValues) {
+    final values = storedPathValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'storedPath', values);
   }
 
-  Future<Id> putByStoredFilename(Meme object) {
-    return putByIndex(r'storedFilename', object);
+  Future<Id> putByStoredPath(Meme object) {
+    return putByIndex(r'storedPath', object);
   }
 
-  Id putByStoredFilenameSync(Meme object, {bool saveLinks = true}) {
-    return putByIndexSync(r'storedFilename', object, saveLinks: saveLinks);
+  Id putByStoredPathSync(Meme object, {bool saveLinks = true}) {
+    return putByIndexSync(r'storedPath', object, saveLinks: saveLinks);
   }
 
-  Future<List<Id>> putAllByStoredFilename(List<Meme> objects) {
-    return putAllByIndex(r'storedFilename', objects);
+  Future<List<Id>> putAllByStoredPath(List<Meme> objects) {
+    return putAllByIndex(r'storedPath', objects);
   }
 
-  List<Id> putAllByStoredFilenameSync(List<Meme> objects,
-      {bool saveLinks = true}) {
-    return putAllByIndexSync(r'storedFilename', objects, saveLinks: saveLinks);
+  List<Id> putAllByStoredPathSync(List<Meme> objects, {bool saveLinks = true}) {
+    return putAllByIndexSync(r'storedPath', objects, saveLinks: saveLinks);
   }
 
   Future<Meme?> getByImageHash(String? imageHash) {
@@ -357,10 +383,10 @@ extension MemeQueryWhereSort on QueryBuilder<Meme, Meme, QWhere> {
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhere> anyStoredFilename() {
+  QueryBuilder<Meme, Meme, QAfterWhere> anyStoredPath() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'storedFilename'),
+        const IndexWhereClause.any(indexName: r'storedPath'),
       );
     });
   }
@@ -377,6 +403,14 @@ extension MemeQueryWhereSort on QueryBuilder<Meme, Meme, QWhere> {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'title'),
+      );
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhere> anyFullText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'fullText'),
       );
     });
   }
@@ -456,19 +490,19 @@ extension MemeQueryWhere on QueryBuilder<Meme, Meme, QWhereClause> {
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameIsNull() {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'storedFilename',
+        indexName: r'storedPath',
         value: [null],
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameIsNotNull() {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'storedFilename',
+        indexName: r'storedPath',
         lower: [null],
         includeLower: false,
         upper: [],
@@ -476,136 +510,136 @@ extension MemeQueryWhere on QueryBuilder<Meme, Meme, QWhereClause> {
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameEqualTo(
-      String? storedFilename) {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathEqualTo(
+      String? storedPath) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'storedFilename',
-        value: [storedFilename],
+        indexName: r'storedPath',
+        value: [storedPath],
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameNotEqualTo(
-      String? storedFilename) {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathNotEqualTo(
+      String? storedPath) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'storedFilename',
+              indexName: r'storedPath',
               lower: [],
-              upper: [storedFilename],
+              upper: [storedPath],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'storedFilename',
-              lower: [storedFilename],
+              indexName: r'storedPath',
+              lower: [storedPath],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'storedFilename',
-              lower: [storedFilename],
+              indexName: r'storedPath',
+              lower: [storedPath],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'storedFilename',
+              indexName: r'storedPath',
               lower: [],
-              upper: [storedFilename],
+              upper: [storedPath],
               includeUpper: false,
             ));
       }
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameGreaterThan(
-    String? storedFilename, {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathGreaterThan(
+    String? storedPath, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'storedFilename',
-        lower: [storedFilename],
+        indexName: r'storedPath',
+        lower: [storedPath],
         includeLower: include,
         upper: [],
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameLessThan(
-    String? storedFilename, {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathLessThan(
+    String? storedPath, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'storedFilename',
+        indexName: r'storedPath',
         lower: [],
-        upper: [storedFilename],
+        upper: [storedPath],
         includeUpper: include,
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameBetween(
-    String? lowerStoredFilename,
-    String? upperStoredFilename, {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathBetween(
+    String? lowerStoredPath,
+    String? upperStoredPath, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'storedFilename',
-        lower: [lowerStoredFilename],
+        indexName: r'storedPath',
+        lower: [lowerStoredPath],
         includeLower: includeLower,
-        upper: [upperStoredFilename],
+        upper: [upperStoredPath],
         includeUpper: includeUpper,
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameStartsWith(
-      String StoredFilenamePrefix) {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathStartsWith(
+      String StoredPathPrefix) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'storedFilename',
-        lower: [StoredFilenamePrefix],
-        upper: ['$StoredFilenamePrefix\u{FFFFF}'],
+        indexName: r'storedPath',
+        lower: [StoredPathPrefix],
+        upper: ['$StoredPathPrefix\u{FFFFF}'],
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameIsEmpty() {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'storedFilename',
+        indexName: r'storedPath',
         value: [''],
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterWhereClause> storedFilenameIsNotEmpty() {
+  QueryBuilder<Meme, Meme, QAfterWhereClause> storedPathIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.lessThan(
-              indexName: r'storedFilename',
+              indexName: r'storedPath',
               upper: [''],
             ))
             .addWhereClause(IndexWhereClause.greaterThan(
-              indexName: r'storedFilename',
+              indexName: r'storedPath',
               lower: [''],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.greaterThan(
-              indexName: r'storedFilename',
+              indexName: r'storedPath',
               lower: [''],
             ))
             .addWhereClause(IndexWhereClause.lessThan(
-              indexName: r'storedFilename',
+              indexName: r'storedPath',
               upper: [''],
             ));
       }
@@ -922,6 +956,162 @@ extension MemeQueryWhere on QueryBuilder<Meme, Meme, QWhereClause> {
     });
   }
 
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'fullText',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'fullText',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextEqualTo(
+      String? fullText) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'fullText',
+        value: [fullText],
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextNotEqualTo(
+      String? fullText) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'fullText',
+              lower: [],
+              upper: [fullText],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'fullText',
+              lower: [fullText],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'fullText',
+              lower: [fullText],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'fullText',
+              lower: [],
+              upper: [fullText],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextGreaterThan(
+    String? fullText, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'fullText',
+        lower: [fullText],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextLessThan(
+    String? fullText, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'fullText',
+        lower: [],
+        upper: [fullText],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextBetween(
+    String? lowerFullText,
+    String? upperFullText, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'fullText',
+        lower: [lowerFullText],
+        includeLower: includeLower,
+        upper: [upperFullText],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextStartsWith(
+      String FullTextPrefix) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'fullText',
+        lower: [FullTextPrefix],
+        upper: ['$FullTextPrefix\u{FFFFF}'],
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'fullText',
+        value: [''],
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterWhereClause> fullTextIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.lessThan(
+              indexName: r'fullText',
+              upper: [''],
+            ))
+            .addWhereClause(IndexWhereClause.greaterThan(
+              indexName: r'fullText',
+              lower: [''],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.greaterThan(
+              indexName: r'fullText',
+              lower: [''],
+            ))
+            .addWhereClause(IndexWhereClause.lessThan(
+              indexName: r'fullText',
+              upper: [''],
+            ));
+      }
+    });
+  }
+
   QueryBuilder<Meme, Meme, QAfterWhereClause> imageHashIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
@@ -1220,6 +1410,151 @@ extension MemeQueryFilter on QueryBuilder<Meme, Meme, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'blurHash',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'fullText',
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'fullText',
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fullText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fullText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fullText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fullText',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'fullText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'fullText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'fullText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'fullText',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fullText',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> fullTextIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'fullText',
         value: '',
       ));
     });
@@ -1622,36 +1957,36 @@ extension MemeQueryFilter on QueryBuilder<Meme, Meme, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameIsNull() {
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'storedFilename',
+        property: r'storedPath',
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameIsNotNull() {
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'storedFilename',
+        property: r'storedPath',
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameEqualTo(
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathEqualTo(
     String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'storedFilename',
+        property: r'storedPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameGreaterThan(
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
@@ -1659,14 +1994,14 @@ extension MemeQueryFilter on QueryBuilder<Meme, Meme, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'storedFilename',
+        property: r'storedPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameLessThan(
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
@@ -1674,14 +2009,14 @@ extension MemeQueryFilter on QueryBuilder<Meme, Meme, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'storedFilename',
+        property: r'storedPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameBetween(
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -1690,7 +2025,7 @@ extension MemeQueryFilter on QueryBuilder<Meme, Meme, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'storedFilename',
+        property: r'storedPath',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1700,69 +2035,69 @@ extension MemeQueryFilter on QueryBuilder<Meme, Meme, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameStartsWith(
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'storedFilename',
+        property: r'storedPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameEndsWith(
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'storedFilename',
+        property: r'storedPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameContains(
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathContains(
       String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'storedFilename',
+        property: r'storedPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameMatches(
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathMatches(
       String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'storedFilename',
+        property: r'storedPath',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameIsEmpty() {
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'storedFilename',
+        property: r'storedPath',
         value: '',
       ));
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedFilenameIsNotEmpty() {
+  QueryBuilder<Meme, Meme, QAfterFilterCondition> storedPathIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'storedFilename',
+        property: r'storedPath',
         value: '',
       ));
     });
@@ -1985,6 +2320,18 @@ extension MemeQuerySortBy on QueryBuilder<Meme, Meme, QSortBy> {
     });
   }
 
+  QueryBuilder<Meme, Meme, QAfterSortBy> sortByFullText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullText', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterSortBy> sortByFullTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullText', Sort.desc);
+    });
+  }
+
   QueryBuilder<Meme, Meme, QAfterSortBy> sortByImageHash() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imageHash', Sort.asc);
@@ -2021,15 +2368,15 @@ extension MemeQuerySortBy on QueryBuilder<Meme, Meme, QSortBy> {
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterSortBy> sortByStoredFilename() {
+  QueryBuilder<Meme, Meme, QAfterSortBy> sortByStoredPath() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'storedFilename', Sort.asc);
+      return query.addSortBy(r'storedPath', Sort.asc);
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterSortBy> sortByStoredFilenameDesc() {
+  QueryBuilder<Meme, Meme, QAfterSortBy> sortByStoredPathDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'storedFilename', Sort.desc);
+      return query.addSortBy(r'storedPath', Sort.desc);
     });
   }
 
@@ -2056,6 +2403,18 @@ extension MemeQuerySortThenBy on QueryBuilder<Meme, Meme, QSortThenBy> {
   QueryBuilder<Meme, Meme, QAfterSortBy> thenByBlurHashDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'blurHash', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterSortBy> thenByFullText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullText', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Meme, Meme, QAfterSortBy> thenByFullTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullText', Sort.desc);
     });
   }
 
@@ -2107,15 +2466,15 @@ extension MemeQuerySortThenBy on QueryBuilder<Meme, Meme, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterSortBy> thenByStoredFilename() {
+  QueryBuilder<Meme, Meme, QAfterSortBy> thenByStoredPath() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'storedFilename', Sort.asc);
+      return query.addSortBy(r'storedPath', Sort.asc);
     });
   }
 
-  QueryBuilder<Meme, Meme, QAfterSortBy> thenByStoredFilenameDesc() {
+  QueryBuilder<Meme, Meme, QAfterSortBy> thenByStoredPathDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'storedFilename', Sort.desc);
+      return query.addSortBy(r'storedPath', Sort.desc);
     });
   }
 
@@ -2140,6 +2499,13 @@ extension MemeQueryWhereDistinct on QueryBuilder<Meme, Meme, QDistinct> {
     });
   }
 
+  QueryBuilder<Meme, Meme, QDistinct> distinctByFullText(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fullText', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Meme, Meme, QDistinct> distinctByImageHash(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2161,11 +2527,10 @@ extension MemeQueryWhereDistinct on QueryBuilder<Meme, Meme, QDistinct> {
     });
   }
 
-  QueryBuilder<Meme, Meme, QDistinct> distinctByStoredFilename(
+  QueryBuilder<Meme, Meme, QDistinct> distinctByStoredPath(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'storedFilename',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'storedPath', caseSensitive: caseSensitive);
     });
   }
 
@@ -2190,6 +2555,12 @@ extension MemeQueryProperty on QueryBuilder<Meme, Meme, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Meme, String?, QQueryOperations> fullTextProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fullText');
+    });
+  }
+
   QueryBuilder<Meme, String?, QQueryOperations> imageHashProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'imageHash');
@@ -2208,9 +2579,9 @@ extension MemeQueryProperty on QueryBuilder<Meme, Meme, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Meme, String?, QQueryOperations> storedFilenameProperty() {
+  QueryBuilder<Meme, String?, QQueryOperations> storedPathProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'storedFilename');
+      return query.addPropertyName(r'storedPath');
     });
   }
 

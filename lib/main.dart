@@ -24,7 +24,7 @@ class MemeVaultApp extends StatelessWidget {
     return MaterialApp(
       title: 'Meme Vault',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),

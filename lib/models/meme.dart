@@ -8,13 +8,16 @@ class Meme {
   Id id = Isar.autoIncrement; // you can also use id = null to auto increment
 
   @Index(type: IndexType.value, unique: true)
-  String? storedFilename;
+  String? storedPath;
 
   @Index(type: IndexType.value)
   String? originalFilename;
 
   @Index(type: IndexType.value)
   String? title;
+
+  @Index(type: IndexType.value)
+  String? fullText;
 
   @Index(type: IndexType.value, unique: true)
   String? imageHash;
